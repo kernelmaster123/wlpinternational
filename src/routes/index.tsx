@@ -237,7 +237,9 @@ function Home() {
   function step(dir: 1 | -1) {
     if (tracks.length === 0) return;
     const next = currentIndex < 0 ? 0 : (currentIndex + dir + tracks.length) % tracks.length;
-    setCurrentId(tracks[next].id);
+    const t = tracks[next];
+    if (!t) return;
+    setCurrentId(t.id);
     setPlaying(true);
   }
 
