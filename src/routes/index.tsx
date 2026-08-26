@@ -55,8 +55,8 @@ function Header() {
   }
 
   return (
-    <header className="relative z-10 px-6 pt-10">
-      <h1 className="text-center text-3xl tracking-[0.18em] sm:text-5xl">
+    <header className="relative z-10 px-4 pt-10">
+      <h1 className="flex flex-nowrap items-baseline justify-center whitespace-nowrap text-2xl tracking-[0.12em] sm:text-4xl md:text-5xl">
         <span className="text-gold">CLOUD </span>
         <span
           onClick={onFmClick}
@@ -65,8 +65,8 @@ function Header() {
         >
           FM
         </span>
-        <span className="mx-3 text-muted-foreground">||</span>
-        <span className="text-foreground/90 text-xl sm:text-3xl tracking-[0.3em]">
+        <span className="mx-2 text-muted-foreground sm:mx-3">||</span>
+        <span className="text-foreground/90 tracking-[0.18em]">
           WLP INTERNATIONAL
         </span>
       </h1>
