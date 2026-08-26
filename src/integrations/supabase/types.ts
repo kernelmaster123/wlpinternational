@@ -14,13 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      artists: {
+        Row: {
+          bio: string | null
+          created_at: string
+          id: string
+          name: string
+          photo_url: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          photo_url?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+        }
+        Relationships: []
+      }
+      donation_info: {
+        Row: {
+          btc_address: string | null
+          eth_address: string | null
+          iban: string | null
+          id: string
+          note: string | null
+          paypal: string | null
+          recipient: string | null
+          updated_at: string
+        }
+        Insert: {
+          btc_address?: string | null
+          eth_address?: string | null
+          iban?: string | null
+          id?: string
+          note?: string | null
+          paypal?: string | null
+          recipient?: string | null
+          updated_at?: string
+        }
+        Update: {
+          btc_address?: string | null
+          eth_address?: string | null
+          iban?: string | null
+          id?: string
+          note?: string | null
+          paypal?: string | null
+          recipient?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tracks: {
+        Row: {
+          artist: string
+          audio_url: string
+          cover_url: string | null
+          created_at: string
+          id: string
+          position: number
+          title: string
+        }
+        Insert: {
+          artist?: string
+          audio_url: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          title: string
+        }
+        Update: {
+          artist?: string
+          audio_url?: string
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
