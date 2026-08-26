@@ -4,20 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -45,44 +31,49 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --font-display: "Instrument Serif", Georgia, serif;
-  --font-sans: "Manrope", system-ui, sans-serif;
+  --font-display: "Bebas Neue", Impact, sans-serif;
+  --font-sans: "Barlow", system-ui, sans-serif;
 }
 
 :root {
-  --radius: 0.25rem;
-  --background: oklch(0.13 0.008 60);
-  --foreground: oklch(0.95 0.008 80);
-  --card: oklch(0.17 0.009 60);
-  --card-foreground: oklch(0.95 0.008 80);
-  --popover: oklch(0.17 0.009 60);
-  --popover-foreground: oklch(0.95 0.008 80);
-  --primary: oklch(0.82 0.12 85);
-  --primary-foreground: oklch(0.15 0.01 60);
-  --secondary: oklch(0.22 0.01 60);
-  --secondary-foreground: oklch(0.95 0.008 80);
-  --muted: oklch(0.22 0.01 60);
-  --muted-foreground: oklch(0.68 0.015 80);
-  --accent: oklch(0.24 0.02 70);
-  --accent-foreground: oklch(0.9 0.05 85);
-  --destructive: oklch(0.55 0.19 25);
-  --destructive-foreground: oklch(0.97 0.01 80);
-  --border: oklch(0.28 0.012 70);
-  --input: oklch(0.25 0.012 70);
-  --ring: oklch(0.82 0.12 85);
+  --radius: 0.125rem;
+  --background: oklch(0.18 0 0);
+  --foreground: oklch(0.93 0 0);
+  --card: oklch(0.22 0 0);
+  --card-foreground: oklch(0.93 0 0);
+  --popover: oklch(0.22 0 0);
+  --popover-foreground: oklch(0.93 0 0);
+  --primary: oklch(0.577 0.245 27.3);
+  --primary-foreground: oklch(0.97 0 0);
+  --secondary: oklch(0.26 0 0);
+  --secondary-foreground: oklch(0.93 0 0);
+  --muted: oklch(0.26 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.28 0.01 27);
+  --accent-foreground: oklch(0.95 0 0);
+  --destructive: oklch(0.577 0.245 27.3);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.32 0 0);
+  --input: oklch(0.3 0 0);
+  --ring: oklch(0.577 0.245 27.3);
 
-  --gradient-gold: linear-gradient(
-    100deg,
-    oklch(0.72 0.09 70),
-    oklch(0.92 0.13 92),
-    oklch(0.74 0.1 60)
+  --gradient-chrome: linear-gradient(
+    180deg,
+    oklch(0.98 0 0),
+    oklch(0.72 0 0),
+    oklch(0.5 0 0)
+  );
+  --gradient-blood: linear-gradient(
+    90deg,
+    oklch(0.42 0.18 27),
+    oklch(0.577 0.245 27.3)
   );
   --gradient-veil: radial-gradient(
     120% 90% at 50% -10%,
-    oklch(0.28 0.05 80 / 0.55),
+    oklch(0.577 0.245 27.3 / 0.22),
     transparent 65%
   );
-  --shadow-lux: 0 30px 80px -40px oklch(0.82 0.12 85 / 0.45);
+  --shadow-lux: 0 30px 80px -40px oklch(0.577 0.245 27.3 / 0.5);
 }
 
 @layer base {
@@ -102,18 +93,25 @@
   h3 {
     font-family: var(--font-display);
     font-weight: 400;
+    letter-spacing: 0.02em;
   }
 }
 
 @utility text-gold {
-  background-image: var(--gradient-gold);
+  background-image: var(--gradient-chrome);
+  background-clip: text;
+  color: transparent;
+}
+
+@utility text-chrome {
+  background-image: var(--gradient-chrome);
   background-clip: text;
   color: transparent;
 }
 
 @utility surface-lux {
-  background-color: var(--card);
-  border: 1px solid var(--border);
+  background-color: color-mix(in oklab, var(--card) 70%, transparent);
+  border: 1px solid oklch(1 0 0 / 0.06);
   box-shadow: var(--shadow-lux);
 }
 
@@ -126,8 +124,20 @@
   background-image: linear-gradient(
     90deg,
     transparent,
-    oklch(0.82 0.12 85 / 0.5),
+    oklch(0.577 0.245 27.3 / 0.5),
     transparent
   );
 }
 
+@utility marquee-track {
+  animation: marquee 24s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
