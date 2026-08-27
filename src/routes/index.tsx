@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Play, Pause, SkipBack, SkipForward, Bitcoin, Wallet, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMediaUrl } from "@/lib/media";
+import { LanguageSwitcher, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,7 +57,10 @@ function Header() {
   }
 
   return (
-    <header className="relative z-10 px-4 pt-8">
+    <header className="relative z-10 px-4 pt-4">
+      <div className="mb-4 flex justify-start">
+        <LanguageSwitcher />
+      </div>
       <h1 className="flex flex-nowrap items-baseline justify-center whitespace-nowrap text-2xl tracking-[0.08em] sm:text-4xl md:text-5xl">
         <span className="text-chrome">CLOUD</span>
         <span onClick={onFmClick} className="text-chrome ml-2 cursor-pointer select-none" aria-label="FM">
@@ -125,6 +129,7 @@ function TrackRow({
 }
 
 function ArtistCard({ artist }: { artist: { name: string; bio: string | null; photo_url: string | null } }) {
+  const { t } = useI18n();
   const photo = useSigned(artist.photo_url);
   return (
     <article className="group relative aspect-[4/5] overflow-hidden bg-secondary">
@@ -138,7 +143,7 @@ function ArtistCard({ artist }: { artist: { name: string; bio: string | null; ph
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       <div className="absolute bottom-0 left-0 w-full p-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Artist</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">{t("artist")}</p>
         <h3 className="font-display text-3xl leading-none text-foreground">{artist.name}</h3>
         {artist.bio && (
           <p className="mt-2 line-clamp-2 text-xs font-medium text-muted-foreground">{artist.bio}</p>
@@ -149,6 +154,7 @@ function ArtistCard({ artist }: { artist: { name: string; bio: string | null; ph
 }
 
 function CopyRow({ label, value }: { label: string; value: string }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex items-center justify-between gap-4 border-b border-black/15 py-4">
@@ -163,7 +169,7 @@ function CopyRow({ label, value }: { label: string; value: string }) {
           setTimeout(() => setCopied(false), 1500);
         }}
         className="shrink-0 p-2 text-black/60 transition-colors hover:text-primary"
-        aria-label={`${label} kopieren`}
+        aria-label={`${label} ${t("copy")}`}
       >
         {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
       </button>
@@ -172,6 +178,7 @@ function CopyRow({ label, value }: { label: string; value: string }) {
 }
 
 function Home() {
+  const { t } = useI18n();
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -252,15 +259,15 @@ function Home() {
         <section className="mx-auto max-w-6xl px-6 pb-16 pt-16 text-center sm:pt-24">
           <p className="flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.4em] text-primary">
             <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-            On Air — 24/7
+            {t("onAir")}
           </p>
           <h2 className="text-chrome mx-auto mt-6 font-display text-6xl leading-[0.95] tracking-tight sm:text-8xl">
-            Jede Art von Musik.
+            {t("heroLine1")}
             <br />
-            <span className="text-primary">Ein Sender.</span>
+            <span className="text-primary">{t("heroLine2")}</span>
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground sm:text-base">
-            Rap • UK Drill • Trap • Alles dazwischen
+            {t("heroSub")}
           </p>
         </section>
         <GenreTicker />
@@ -269,15 +276,15 @@ function Home() {
       <main className="mx-auto max-w-6xl px-4 pb-40 sm:px-6">
         <section id="playlist" className="pt-14">
           <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">PLAYLIST</h2>
+            <h2 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">{t("playlist")}</h2>
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-              {tracks.length} Tracks
+              {tracks.length} {t("tracks")}
             </span>
           </div>
           <div className="surface-lux">
             {tracks.length === 0 ? (
               <p className="p-10 text-center text-sm uppercase tracking-widest text-muted-foreground">
-                Noch keine Tracks in der Playlist.
+                {t("noTracks")}
               </p>
             ) : (
               tracks.map((t, i) => (
@@ -295,14 +302,14 @@ function Home() {
 
         <section id="artists" className="pt-24">
           <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">ARTISTS</h2>
+            <h2 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">{t("artists")}</h2>
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">
-              Worldwide Roster
+              {t("roster")}
             </span>
           </div>
           {artists.length === 0 ? (
             <p className="text-sm uppercase tracking-widest text-muted-foreground">
-              Noch keine Artists hinterlegt.
+              {t("noArtists")}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-1 md:grid-cols-4">
@@ -322,7 +329,7 @@ function Home() {
             </div>
             <div className="relative z-10">
               <h3 className="font-display text-5xl leading-none sm:text-7xl">
-                SUPPORT THE <span className="text-primary">MOVEMENT</span>
+                {t("supportA")} <span className="text-primary">{t("supportB")}</span>
               </h3>
               {donation?.note && (
                 <p className="mx-auto mt-5 max-w-xl text-sm font-medium uppercase tracking-tight text-black/60">
@@ -330,12 +337,12 @@ function Home() {
                 </p>
               )}
               <div className="mx-auto mt-8 max-w-2xl text-left">
-                {donation?.recipient && <CopyRow label="Empfänger" value={donation.recipient} />}
+                {donation?.recipient && <CopyRow label={t("recipient")} value={donation.recipient} />}
                 {donation?.btc_address && (
                   <div className="flex items-center gap-3">
                     <Bitcoin className="h-4 w-4 shrink-0 text-primary" />
                     <div className="flex-1">
-                      <CopyRow label="Bitcoin Wallet" value={donation.btc_address} />
+                      <CopyRow label={t("btc")} value={donation.btc_address} />
                     </div>
                   </div>
                 )}
@@ -343,12 +350,12 @@ function Home() {
                   <div className="flex items-center gap-3">
                     <Wallet className="h-4 w-4 shrink-0 text-primary" />
                     <div className="flex-1">
-                      <CopyRow label="Ethereum Wallet" value={donation.eth_address} />
+                      <CopyRow label={t("eth")} value={donation.eth_address} />
                     </div>
                   </div>
                 )}
                 {donation?.paypal && <CopyRow label="PayPal" value={donation.paypal} />}
-                {donation?.iban && <CopyRow label="IBAN" value={donation.iban} />}
+                {donation?.iban && <CopyRow label={t("iban")} value={donation.iban} />}
               </div>
             </div>
           </div>
@@ -376,21 +383,21 @@ function Home() {
               <button
                 onClick={() => step(-1)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Zurück"
+                aria-label={t("prev")}
               >
                 <SkipBack className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setPlaying((p) => !p)}
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:scale-105"
-                aria-label="Wiedergabe"
+                aria-label={t("play")}
               >
                 {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
               </button>
               <button
                 onClick={() => step(1)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Weiter"
+                aria-label={t("next")}
               >
                 <SkipForward className="h-4 w-4" />
               </button>
