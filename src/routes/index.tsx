@@ -58,8 +58,8 @@ function Header() {
   return (
     <header className="relative z-10 px-4 pt-8">
       <h1 className="flex flex-nowrap items-baseline justify-center whitespace-nowrap text-2xl tracking-[0.08em] sm:text-4xl md:text-5xl">
-        <span className="text-chrome">CLOUD </span>
-        <span onClick={onFmClick} className="text-chrome cursor-pointer select-none" aria-label="FM">
+        <span className="text-chrome">CLOUD</span>
+        <span onClick={onFmClick} className="text-chrome ml-2 cursor-pointer select-none" aria-label="FM">
           FM
         </span>
         <span className="mx-2 text-primary sm:mx-3">||</span>
