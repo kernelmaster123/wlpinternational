@@ -1,10 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Bitcoin, Wallet, Copy, Check } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Bitcoin, Wallet, Copy, Check, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMediaUrl } from "@/lib/media";
+import { getEmbed } from "@/lib/embed";
 import { LanguageSwitcher, useI18n } from "@/lib/i18n";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -58,9 +60,16 @@ function Header() {
 
   return (
     <header className="relative z-10 px-4 pt-4">
-      <div className="mb-4 flex justify-start">
+      <div className="mb-4 flex items-center justify-between">
         <LanguageSwitcher />
+        <Link
+          to="/games"
+          className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground transition-colors hover:text-primary"
+        >
+          <Gamepad2 className="h-4 w-4" /> Games
+        </Link>
       </div>
+
       <h1 className="flex flex-nowrap items-baseline justify-center whitespace-nowrap text-2xl tracking-[0.08em] sm:text-4xl md:text-5xl">
         <span className="text-chrome">CLOUD</span>
         <span onClick={onFmClick} className="text-chrome ml-2 cursor-pointer select-none" aria-label="FM">
@@ -218,20 +227,28 @@ function Home() {
   });
 
   const current = tracks.find((t) => t.id === currentId) ?? null;
-  const currentUrl = useSigned(current?.audio_url);
+  const embed = getEmbed(current?.audio_url);
+  const currentUrl = useSigned(embed ? null : current?.audio_url);
   const currentIndex = tracks.findIndex((t) => t.id === currentId);
 
   useEffect(() => {
-    if (!audioRef.current || !currentUrl) return;
+    if (!audioRef.current) return;
+    if (embed) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute("src");
+      return;
+    }
+    if (!currentUrl) return;
     audioRef.current.src = currentUrl;
     if (playing) void audioRef.current.play().catch(() => setPlaying(false));
-  }, [currentUrl]);
+  }, [currentUrl, embed?.src]);
 
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || embed) return;
     if (playing) void audioRef.current.play().catch(() => setPlaying(false));
     else audioRef.current.pause();
   }, [playing]);
+
 
   function toggle(id: string) {
     if (id === currentId) setPlaying((p) => !p);
@@ -387,13 +404,15 @@ function Home() {
               >
                 <SkipBack className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setPlaying((p) => !p)}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:scale-105"
-                aria-label={t("play")}
-              >
-                {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
-              </button>
+              {!embed && (
+                <button
+                  onClick={() => setPlaying((p) => !p)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:scale-105"
+                  aria-label={t("play")}
+                >
+                  {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
+                </button>
+              )}
               <button
                 onClick={() => step(1)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
@@ -403,6 +422,20 @@ function Home() {
               </button>
             </div>
           </div>
+          {embed && (
+            <div className="mx-auto max-w-6xl px-3 pb-3">
+              <iframe
+                key={embed.src}
+                src={embed.src}
+                title={current.title}
+                height={embed.height}
+                className="w-full border-0"
+                loading="lazy"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              />
+            </div>
+          )}
+
         </div>
       )}
       <audio ref={audioRef} onEnded={() => step(1)} className="hidden" />

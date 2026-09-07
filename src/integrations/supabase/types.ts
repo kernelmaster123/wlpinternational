@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -35,6 +35,39 @@ export type Database = {
           id?: string
           name?: string
           photo_url?: string | null
+        }
+        Relationships: []
+      }
+      bot_settings: {
+        Row: {
+          bot_name: string
+          enabled: boolean
+          id: string
+          instructions: string | null
+          lang: string
+          length: string
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          bot_name?: string
+          enabled?: boolean
+          id?: string
+          instructions?: string | null
+          lang?: string
+          length?: string
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          bot_name?: string
+          enabled?: boolean
+          id?: string
+          instructions?: string | null
+          lang?: string
+          length?: string
+          tone?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -71,6 +104,107 @@ export type Database = {
         }
         Relationships: []
       }
+      game_posts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_featured: boolean
+          kind: string
+          likes: number
+          link_url: string | null
+          platform: string | null
+          position: number
+          rating: number
+          shares: number
+          subtitle: string | null
+          title: string
+          top_rank: number | null
+          views: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          kind?: string
+          likes?: number
+          link_url?: string | null
+          platform?: string | null
+          position?: number
+          rating?: number
+          shares?: number
+          subtitle?: string | null
+          title: string
+          top_rank?: number | null
+          views?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          kind?: string
+          likes?: number
+          link_url?: string | null
+          platform?: string | null
+          position?: number
+          rating?: number
+          shares?: number
+          subtitle?: string | null
+          title?: string
+          top_rank?: number | null
+          views?: number
+        }
+        Relationships: []
+      }
+      game_reviews: {
+        Row: {
+          author: string
+          body: string
+          created_at: string
+          id: string
+          lang: string
+          likes: number
+          post_id: string
+          rating: number | null
+          tone: string | null
+        }
+        Insert: {
+          author?: string
+          body: string
+          created_at?: string
+          id?: string
+          lang?: string
+          likes?: number
+          post_id: string
+          rating?: number | null
+          tone?: string | null
+        }
+        Update: {
+          author?: string
+          body?: string
+          created_at?: string
+          id?: string
+          lang?: string
+          likes?: number
+          post_id?: string
+          rating?: number | null
+          tone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_reviews_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "game_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tracks: {
         Row: {
           artist: string
@@ -106,7 +240,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      bump_post_metric: {
+        Args: { _metric: string; _post_id: string }
+        Returns: undefined
+      }
+      bump_review_likes: { Args: { _review_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
@@ -125,12 +263,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -154,11 +292,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -179,11 +317,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -204,11 +342,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -221,11 +359,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
