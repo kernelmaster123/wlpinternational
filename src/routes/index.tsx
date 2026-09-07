@@ -404,13 +404,15 @@ function Home() {
               >
                 <SkipBack className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setPlaying((p) => !p)}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:scale-105"
-                aria-label={t("play")}
-              >
-                {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
-              </button>
+              {!embed && (
+                <button
+                  onClick={() => setPlaying((p) => !p)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:scale-105"
+                  aria-label={t("play")}
+                >
+                  {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
+                </button>
+              )}
               <button
                 onClick={() => step(1)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
@@ -420,6 +422,20 @@ function Home() {
               </button>
             </div>
           </div>
+          {embed && (
+            <div className="mx-auto max-w-6xl px-3 pb-3">
+              <iframe
+                key={embed.src}
+                src={embed.src}
+                title={current.title}
+                height={embed.height}
+                className="w-full border-0"
+                loading="lazy"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              />
+            </div>
+          )}
+
         </div>
       )}
       <audio ref={audioRef} onEnded={() => step(1)} className="hidden" />
