@@ -14,12 +14,12 @@ export const Route = createFileRoute("/games")({
       {
         name: "description",
         content:
-          "Games und Apps von CLOUD FM: App der Woche, Top 10 Charts und Bot-Rezensionen mit Likes und Shares.",
+          "Games und Apps von CLOUD FM: App der Woche, Top 10 Charts.",
       },
       { property: "og:title", content: "Games & Apps — CLOUD FM" },
       {
         property: "og:description",
-        content: "App der Woche, Top 10 Games & Apps und automatische Bot-Rezensionen.",
+        content: "App der Woche, Top 10 Games & Apps.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
