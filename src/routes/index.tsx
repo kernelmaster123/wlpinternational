@@ -227,20 +227,28 @@ function Home() {
   });
 
   const current = tracks.find((t) => t.id === currentId) ?? null;
-  const currentUrl = useSigned(current?.audio_url);
+  const embed = getEmbed(current?.audio_url);
+  const currentUrl = useSigned(embed ? null : current?.audio_url);
   const currentIndex = tracks.findIndex((t) => t.id === currentId);
 
   useEffect(() => {
-    if (!audioRef.current || !currentUrl) return;
+    if (!audioRef.current) return;
+    if (embed) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute("src");
+      return;
+    }
+    if (!currentUrl) return;
     audioRef.current.src = currentUrl;
     if (playing) void audioRef.current.play().catch(() => setPlaying(false));
-  }, [currentUrl]);
+  }, [currentUrl, embed?.src]);
 
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || embed) return;
     if (playing) void audioRef.current.play().catch(() => setPlaying(false));
     else audioRef.current.pause();
   }, [playing]);
+
 
   function toggle(id: string) {
     if (id === currentId) setPlaying((p) => !p);
