@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const Route = createFileRoute("/games/palmon")({
+export const Route = createFileRoute("/Games/Palmon")({
   component: PalmonSurvivalPage,
 });
 
