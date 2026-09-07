@@ -60,9 +60,16 @@ function Header() {
 
   return (
     <header className="relative z-10 px-4 pt-4">
-      <div className="mb-4 flex justify-start">
+      <div className="mb-4 flex items-center justify-between">
         <LanguageSwitcher />
+        <Link
+          to="/games"
+          className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground transition-colors hover:text-primary"
+        >
+          <Gamepad2 className="h-4 w-4" /> Games
+        </Link>
       </div>
+
       <h1 className="flex flex-nowrap items-baseline justify-center whitespace-nowrap text-2xl tracking-[0.08em] sm:text-4xl md:text-5xl">
         <span className="text-chrome">CLOUD</span>
         <span onClick={onFmClick} className="text-chrome ml-2 cursor-pointer select-none" aria-label="FM">
