@@ -211,8 +211,6 @@ function GamesPage() {
           <p className="text-xs font-bold uppercase tracking-[0.4em] text-primary">Gaming Desk</p>
           <h2 className="text-chrome mx-auto mt-5 font-display text-5xl leading-[0.95] sm:text-7xl">
             GAMES. APPS.
-            <br />
-            <span className="text-primary">BOT REVIEWS.</span>
           </h2>
         </section>
       </div>
