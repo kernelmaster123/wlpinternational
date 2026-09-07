@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Shield, UserPlus, Trash2, Edit, Sparkles, Star, ExternalLink, Settings, Plus, X } from "lucide-react";
+import { Shield, UserPlus, Trash2, Edit, Sparkles, Settings, Plus, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/Games/Palmon")({
   component: PalmonSurvivalPage,
@@ -54,8 +55,20 @@ function getEffectClass(effectType: string) {
 function PalmonSurvivalPage() {
   const [activeTab, setActiveTab] = useState("patchnotes");
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Lokale States mit LocalStorage-Synchronisation
+  // Prüfen, ob ein Admin eingeloggt ist
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setIsAdmin(true);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  // Lokale States mit LocalStorage-Synchronisation (Fallback, falls SQL-Editor nicht geht)
   const [guilds, setGuilds] = useState<Guild[]>(() => {
     const saved = localStorage.getItem("palmon_local_guilds");
     return saved ? JSON.parse(saved) : INITIAL_GUILDS;
@@ -74,11 +87,9 @@ function PalmonSurvivalPage() {
     localStorage.setItem("palmon_local_members", JSON.stringify(members));
   }, [members]);
 
-  // States für Admin-Formulare
   const [editingGuild, setEditingGuild] = useState<Partial<Guild> | null>(null);
   const [editingMember, setEditingMember] = useState<Partial<GuildMember> | null>(null);
 
-  // Statische Daten für Patchnotes, Server, Quests
   const patchnotes = [
     { version: "v1.0.4", title: "Große Map-Erweiterung", category: "Patch", date: "05.06.2026", content: "Neue Biome, neue Palmon-Arten und Bugfixes für das Multiplayer-Hosting." },
     { version: "v1.0.3", title: "Performance Hotfix", category: "Hotfix", date: "28.05.2026", content: "Ladezeiten im Inventar optimiert und Server-Lag reduziert." },
@@ -94,11 +105,9 @@ function PalmonSurvivalPage() {
     { title: "Turm des Syndikats", category: "Boss-Quest", reward: "Antike Technologie-Punkte", desc: "Bezwinge den Boss im ersten Wüstenturm." },
   ];
 
-  // Admin-Aktionen Gilden
   function saveGuild(e: React.FormEvent) {
     e.preventDefault();
     if (!editingGuild?.name) return;
-    
     if (editingGuild.id) {
       setGuilds(guilds.map((g) => (g.id === editingGuild.id ? ({ ...g, ...editingGuild } as Guild) : g)));
     } else {
@@ -121,11 +130,9 @@ function PalmonSurvivalPage() {
     setMembers(members.filter((m) => m.guild_id !== id));
   }
 
-  // Admin-Aktionen Mitglieder
   function saveMember(e: React.FormEvent) {
     e.preventDefault();
     if (!editingMember?.name || !editingMember?.guild_id) return;
-
     if (editingMember.id) {
       setMembers(members.map((m) => (m.id === editingMember.id ? ({ ...m, ...editingMember } as GuildMember) : m)));
     } else {
@@ -160,24 +167,28 @@ function PalmonSurvivalPage() {
               ← Zurück zu Games & Apps
             </Link>
             <h1 className="mt-2 font-display text-3xl tracking-wide text-gold">PALMON SURVIVAL HUB</h1>
-            <p className="text-sm text-muted-foreground">Offizielles Community-, Server- & Gilden-Hub (Lokal aktiv)</p>
+            <p className="text-sm text-muted-foreground">Offizielles Community-, Server- & Gilden-Hub</p>
           </div>
-          <button
-            onClick={() => setIsAdminOpen(!isAdminOpen)}
-            className="flex items-center gap-2 rounded border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary hover:text-background"
-          >
-            <Settings className="h-4 w-4" /> {isAdminOpen ? "Admin schließen" : "Admin-Menü"}
-          </button>
+
+          {/* ADMIN-BUTTON: Erscheint NUR, wenn du eingeloggt bist! */}
+          {isAdmin && (
+            <button
+              onClick={() => setIsAdminOpen(!isAdminOpen)}
+              className="flex items-center gap-2 rounded border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary hover:text-background"
+            >
+              <Settings className="h-4 w-4" /> {isAdminOpen ? "Admin schließen" : "Gilden verwalten"}
+            </button>
+          )}
         </div>
 
         <div className="hairline" />
 
-        {/* ADMIN MENÜ MODAL / BEREICH */}
-        {isAdminOpen && (
-          <div className="surface-lux border-2 border-primary/60 p-6 space-y-6 rounded-sm bg-black/80">
+        {/* ADMIN MENÜ (Nur sichtbar, wenn eingeloggt UND Button geklickt) */}
+        {isAdmin && isAdminOpen && (
+          <div className="surface-lux border-2 border-primary/60 p-6 space-y-6 rounded-sm bg-black/90">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <h2 className="font-display text-xl text-primary flex items-center gap-2">
-                <Settings className="h-5 w-5" /> Lokales Gilden-Admin-Menü
+                <Settings className="h-5 w-5" /> Palmon Gilden Admin-Steuerung
               </h2>
               <button onClick={() => setIsAdminOpen(false)} className="text-muted-foreground hover:text-white">
                 <X className="h-5 w-5" />
@@ -205,7 +216,7 @@ function PalmonSurvivalPage() {
                       placeholder="Gildenname"
                       value={editingGuild.name || ""}
                       onChange={(e) => setEditingGuild({ ...editingGuild, name: e.target.value })}
-                      className="bg-background px-3 py-2 text-sm border border-white/10"
+                      className="bg-background px-3 py-2 text-sm border border-white/10 text-white"
                       required
                     />
                     <div className="flex items-center gap-2">
@@ -223,28 +234,27 @@ function PalmonSurvivalPage() {
                     placeholder="Logo URL / Bildpfad"
                     value={editingGuild.logo_url || ""}
                     onChange={(e) => setEditingGuild({ ...editingGuild, logo_url: e.target.value })}
-                    className="w-full bg-background px-3 py-2 text-sm border border-white/10"
+                    className="w-full bg-background px-3 py-2 text-sm border border-white/10 text-white"
                   />
                   <textarea
                     placeholder="Beschreibung"
                     value={editingGuild.description || ""}
                     onChange={(e) => setEditingGuild({ ...editingGuild, description: e.target.value })}
-                    className="w-full bg-background px-3 py-2 text-sm border border-white/10"
+                    className="w-full bg-background px-3 py-2 text-sm border border-white/10 text-white"
                   />
                   <div className="flex justify-end gap-2">
-                    <button type="button" onClick={() => setEditingGuild(null)} className="px-3 py-1.5 text-xs bg-secondary">Abbrechen</button>
+                    <button type="button" onClick={() => setEditingGuild(null)} className="px-3 py-1.5 text-xs bg-secondary text-white">Abbrechen</button>
                     <button type="submit" className="px-3 py-1.5 text-xs bg-primary text-primary-foreground font-bold">Speichern</button>
                   </div>
                 </form>
               )}
 
-              {/* Gilden-Liste im Admin */}
               <div className="space-y-2">
                 {guilds.map((g) => (
                   <div key={g.id} className="flex items-center justify-between bg-secondary/30 p-3 rounded">
                     <div className="flex items-center gap-3">
                       <span className="h-4 w-4 rounded-full" style={{ backgroundColor: g.color }} />
-                      <span className="font-display text-sm">{g.name}</span>
+                      <span className="font-display text-sm text-white">{g.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => setEditingGuild(g)} className="p-1.5 text-muted-foreground hover:text-primary" title="Bearbeiten">
@@ -262,7 +272,7 @@ function PalmonSurvivalPage() {
             {/* Mitglieder verwalten */}
             <div className="space-y-4 pt-4 border-t border-white/10">
               <div className="flex items-center justify-between">
-                <h3 className="font-display text-lg">Gildenmitglieder & Spieler verwalten</h3>
+                <h3 className="font-display text-lg">Gildenmitglieder verwalten</h3>
                 <button
                   onClick={() => setEditingMember({ name: "", rank: "Mitglied", effect_type: "none", highlight: false, guild_id: guilds[0]?.id || "" })}
                   className="flex items-center gap-1 bg-primary px-3 py-1.5 text-xs font-bold uppercase text-primary-foreground"
@@ -279,7 +289,7 @@ function PalmonSurvivalPage() {
                     <select
                       value={editingMember.guild_id || ""}
                       onChange={(e) => setEditingMember({ ...editingMember, guild_id: e.target.value })}
-                      className="bg-background px-3 py-2 text-sm border border-white/10"
+                      className="bg-background px-3 py-2 text-sm border border-white/10 text-white"
                       required
                     >
                       <option value="">Gilde wählen...</option>
@@ -292,7 +302,7 @@ function PalmonSurvivalPage() {
                       placeholder="Spielername"
                       value={editingMember.name || ""}
                       onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
-                      className="bg-background px-3 py-2 text-sm border border-white/10"
+                      className="bg-background px-3 py-2 text-sm border border-white/10 text-white"
                       required
                     />
                   </div>
@@ -302,12 +312,12 @@ function PalmonSurvivalPage() {
                       placeholder="Rang (z.B. Gildenmeister)"
                       value={editingMember.rank || ""}
                       onChange={(e) => setEditingMember({ ...editingMember, rank: e.target.value })}
-                      className="bg-background px-3 py-2 text-sm border border-white/10"
+                      className="bg-background px-3 py-2 text-sm border border-white/10 text-white"
                     />
                     <select
                       value={editingMember.effect_type || "none"}
                       onChange={(e) => setEditingMember({ ...editingMember, effect_type: e.target.value })}
-                      className="bg-background px-3 py-2 text-sm border border-white/10"
+                      className="bg-background px-3 py-2 text-sm border border-white/10 text-white"
                     >
                       <option value="none">Effekt: Keiner</option>
                       <option value="glow">Leuchten (Glow)</option>
@@ -329,10 +339,10 @@ function PalmonSurvivalPage() {
                     placeholder="Avatar Bild-URL"
                     value={editingMember.avatar_url || ""}
                     onChange={(e) => setEditingMember({ ...editingMember, avatar_url: e.target.value })}
-                    className="w-full bg-background px-3 py-2 text-sm border border-white/10"
+                    className="w-full bg-background px-3 py-2 text-sm border border-white/10 text-white"
                   />
                   <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 text-xs cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs cursor-pointer text-white">
                       <input
                         type="checkbox"
                         checked={editingMember.highlight || false}
@@ -342,20 +352,19 @@ function PalmonSurvivalPage() {
                     </label>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <button type="button" onClick={() => setEditingMember(null)} className="px-3 py-1.5 text-xs bg-secondary">Abbrechen</button>
+                    <button type="button" onClick={() => setEditingMember(null)} className="px-3 py-1.5 text-xs bg-secondary text-white">Abbrechen</button>
                     <button type="submit" className="px-3 py-1.5 text-xs bg-primary text-primary-foreground font-bold">Speichern</button>
                   </div>
                 </form>
               )}
 
-              {/* Mitglieder Liste im Admin */}
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {members.map((m) => {
                   const guildName = guilds.find((g) => g.id === m.guild_id)?.name || "Unbekannt";
                   return (
                     <div key={m.id} className="flex items-center justify-between bg-secondary/30 p-3 rounded">
                       <div className="flex items-center gap-3">
-                        <span className="font-display text-sm">{m.name}</span>
+                        <span className="font-display text-sm text-white">{m.name}</span>
                         <span className="text-[10px] text-muted-foreground bg-background px-2 py-0.5 rounded">Gilde: {guildName}</span>
                         <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded">{m.rank}</span>
                       </div>
@@ -447,10 +456,10 @@ function PalmonSurvivalPage() {
             <div className="space-y-8">
               {guilds.length === 0 ? (
                 <div className="surface-lux p-8 text-center text-muted-foreground">
-                  <p>Noch keine Gilden vorhanden. Öffne das <button onClick={() => setIsAdminOpen(true)} className="text-primary underline">Admin-Menü</button>, um Gilden hinzuzufügen.</p>
+                  <p>Noch keine Gilden vorhanden.</p>
                 </div>
               ) : (
-                guilds.map((guild) => {
+                guilds.nowMap || guilds.map((guild) => {
                   const guildMembers = members.filter((m) => m.guild_id === guild.id);
                   return (
                     <div
