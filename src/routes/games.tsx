@@ -13,8 +13,7 @@ export const Route = createFileRoute("/games")({
       { title: "Games & Apps — CLOUD FM | WLP International" },
       {
         name: "description",
-        content:
-          "Games und Apps von CLOUD FM: App der Woche, Top 10 Charts.",
+        content: "Games und Apps von CLOUD FM: App der Woche, Top 10 Charts.",
       },
       { property: "og:title", content: "Games & Apps — CLOUD FM" },
       {
@@ -208,9 +207,17 @@ function GamesPage() {
         </header>
 
         <section className="mx-auto max-w-6xl px-6 pb-12 pt-14 text-center">
-          <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.4em] text-primary mb-2">
-            <Gamepad2 className="h-3.5 w-3.5" /> Palmon Survival Hub
-          </p>
+          {/* Klar erkennbarer, leuchtender Button als Link zum Palmon Survival Hub */}
+          <div className="mb-6 flex justify-center">
+            <Link
+              to="/games/palmon"
+              className="inline-flex items-center gap-3 rounded-lg border-2 border-primary bg-primary/20 px-8 py-4 font-display text-base tracking-widest text-primary shadow-[0_0_25px_rgba(239,68,68,0.4)] transition-all duration-300 hover:bg-primary hover:text-background hover:scale-105 hover:shadow-[0_0_35px_rgba(239,68,68,0.7)]"
+            >
+              <Gamepad2 className="h-6 w-6 animate-pulse" />
+              <span>PALMON SURVIVAL HUB ÖFFNEN</span>
+              <ExternalLink className="h-5 w-5" />
+            </Link>
+          </div>
           <h2 className="text-chrome mx-auto mt-5 font-display text-5xl leading-[0.95] sm:text-7xl">
             GAMES. APPS.
           </h2>
