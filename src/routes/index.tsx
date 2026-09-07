@@ -1,10 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Bitcoin, Wallet, Copy, Check } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Bitcoin, Wallet, Copy, Check, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMediaUrl } from "@/lib/media";
+import { getEmbed } from "@/lib/embed";
 import { LanguageSwitcher, useI18n } from "@/lib/i18n";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
