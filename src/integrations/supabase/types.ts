@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_settings: {
+        Row: {
+          bot_name: string
+          enabled: boolean
+          id: string
+          instructions: string | null
+          lang: string
+          length: string
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          bot_name?: string
+          enabled?: boolean
+          id?: string
+          instructions?: string | null
+          lang?: string
+          length?: string
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          bot_name?: string
+          enabled?: boolean
+          id?: string
+          instructions?: string | null
+          lang?: string
+          length?: string
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       donation_info: {
         Row: {
           btc_address: string | null
@@ -70,6 +103,107 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      game_posts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_featured: boolean
+          kind: string
+          likes: number
+          link_url: string | null
+          platform: string | null
+          position: number
+          rating: number
+          shares: number
+          subtitle: string | null
+          title: string
+          top_rank: number | null
+          views: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          kind?: string
+          likes?: number
+          link_url?: string | null
+          platform?: string | null
+          position?: number
+          rating?: number
+          shares?: number
+          subtitle?: string | null
+          title: string
+          top_rank?: number | null
+          views?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          kind?: string
+          likes?: number
+          link_url?: string | null
+          platform?: string | null
+          position?: number
+          rating?: number
+          shares?: number
+          subtitle?: string | null
+          title?: string
+          top_rank?: number | null
+          views?: number
+        }
+        Relationships: []
+      }
+      game_reviews: {
+        Row: {
+          author: string
+          body: string
+          created_at: string
+          id: string
+          lang: string
+          likes: number
+          post_id: string
+          rating: number | null
+          tone: string | null
+        }
+        Insert: {
+          author?: string
+          body: string
+          created_at?: string
+          id?: string
+          lang?: string
+          likes?: number
+          post_id: string
+          rating?: number | null
+          tone?: string | null
+        }
+        Update: {
+          author?: string
+          body?: string
+          created_at?: string
+          id?: string
+          lang?: string
+          likes?: number
+          post_id?: string
+          rating?: number | null
+          tone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_reviews_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "game_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tracks: {
         Row: {
@@ -106,7 +240,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      bump_post_metric: {
+        Args: { _metric: string; _post_id: string }
+        Returns: undefined
+      }
+      bump_review_likes: { Args: { _review_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
