@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Bitcoin, Wallet, Copy, Check, Gamepad2, Star, ExternalLink } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Bitcoin, Wallet, Copy, Check, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMediaUrl } from "@/lib/media";
 import { getEmbed } from "@/lib/embed";
@@ -62,10 +62,10 @@ function Header() {
       <div className="mb-4 flex items-center justify-between">
         <LanguageSwitcher />
         <Link
-          to="/Games/palmon"
-          className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-primary transition-colors hover:text-primary/80"
+          to="/games"
+          className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground transition-colors hover:text-primary"
         >
-          <Gamepad2 className="h-4 w-4" /> Palmon Hub
+          <Gamepad2 className="h-4 w-4" /> Games
         </Link>
       </div>
 
@@ -289,38 +289,6 @@ function Home() {
       </div>
 
       <main className="mx-auto max-w-6xl px-4 pb-40 sm:px-6">
-        {/* Featured Game / App Section (Palmon Survival) */}
-        <section id="featured-game" className="pt-14">
-          <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">App der Woche</h2>
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Featured</span>
-          </div>
-          <div className="surface-lux rounded-sm p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-3 text-left flex-1">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
-                <Gamepad2 className="h-4 w-4" /> Game • Android, Apple
-              </div>
-              <h3 className="font-display text-3xl tracking-wide text-foreground">PALMON SURVIVAL</h3>
-              <p className="text-sm text-muted-foreground">
-                Offizielles Community- & Infos-Hub mit What's New, Serverstatus, Gilden und Quests.
-              </p>
-              <div className="flex items-center gap-4 pt-2">
-                <div className="flex items-center gap-1 text-gold font-mono text-sm">
-                  <Star className="h-4 w-4 fill-primary text-primary" /> 9.5
-                </div>
-              </div>
-            </div>
-            <div>
-              <Link
-                to="/Games/palmon"
-                className="inline-flex items-center gap-2 bg-primary px-6 py-3 font-display text-sm tracking-wider text-background transition-transform hover:scale-105 rounded-sm"
-              >
-                Öffnen <ExternalLink className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
-
         <section id="playlist" className="pt-14">
           <div className="mb-6 flex items-end justify-between">
             <h2 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">{t("playlist")}</h2>
