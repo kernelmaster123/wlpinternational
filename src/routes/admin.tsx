@@ -116,13 +116,15 @@ function Panel() {
         </Button>
       </div>
       <Tabs defaultValue="tracks">
-        <TabsList className="w-full">
-          <TabsTrigger value="tracks" className="flex-1">Playlist</TabsTrigger>
-          <TabsTrigger value="artists" className="flex-1">Artists</TabsTrigger>
-          <TabsTrigger value="donation" className="flex-1">Spenden</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-4">
+          <TabsTrigger value="tracks">Playlist</TabsTrigger>
+          <TabsTrigger value="artists">Artists</TabsTrigger>
+          <TabsTrigger value="games">Games</TabsTrigger>
+          <TabsTrigger value="donation">Spenden</TabsTrigger>
         </TabsList>
         <TabsContent value="tracks"><TracksAdmin /></TabsContent>
         <TabsContent value="artists"><ArtistsAdmin /></TabsContent>
+        <TabsContent value="games"><GamesAdmin /></TabsContent>
         <TabsContent value="donation"><DonationAdmin /></TabsContent>
       </Tabs>
     </div>
@@ -289,6 +291,127 @@ function ArtistsAdmin() {
           <div key={a.id} className="flex items-center justify-between border-b border-border/60 px-5 py-3">
             <span className="truncate text-sm">{a.name}</span>
             <Button variant="ghost" size="sm" onClick={() => remove(a.id)}>Löschen</Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GamesAdmin() {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const { data: games = [] } = useQuery({
+    queryKey: ["game_posts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("game_posts").select("*").order("position");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const image = fd.get("image") as File | null;
+    setBusy(true);
+    try {
+      const image_url = image?.size ? await uploadMedia(image, "games") : null;
+      const { error } = await supabase.from("game_posts").insert({
+        title: String(fd.get("title")),
+        subtitle: String(fd.get("subtitle") ?? ""),
+        description: String(fd.get("description") ?? ""),
+        kind: String(fd.get("kind") ?? "game"),
+        platform: String(fd.get("platform") ?? ""),
+        rating: Number(fd.get("rating") ?? 0),
+        link_url: String(fd.get("link_url") ?? ""),
+        image_url,
+        is_featured: fd.get("is_featured") === "on",
+        top_rank: fd.get("top_rank") ? Number(fd.get("top_rank")) : null,
+        position: Number(fd.get("position") ?? 0),
+      });
+      if (error) throw error;
+      form.reset();
+      qc.invalidateQueries({ queryKey: ["game_posts"] });
+      toast.success("Game/App hinzugefügt");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Fehler beim Speichern");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(id: string) {
+    const { error } = await supabase.from("game_posts").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else qc.invalidateQueries({ queryKey: ["game_posts"] });
+  }
+
+  return (
+    <div className="mt-6 space-y-8">
+      <form onSubmit={onSubmit} className="surface-lux space-y-4 rounded-sm p-6">
+        <div className="space-y-2">
+          <Label htmlFor="title">Titel</Label>
+          <Input id="title" name="title" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="subtitle">Untertitel</Label>
+          <Input id="subtitle" name="subtitle" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="description">Beschreibung</Label>
+          <Textarea id="description" name="description" rows={3} />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="kind">Art</Label>
+            <select id="kind" name="kind" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <option value="game">Game</option>
+              <option value="app">App</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="platform">Plattform</Label>
+            <Input id="platform" name="platform" placeholder="z.B. iOS, Android, PC" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="rating">Rating (0-10)</Label>
+            <Input id="rating" name="rating" type="number" step="0.1" defaultValue={8.5} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="top_rank">Top 10 Rang (optional)</Label>
+            <Input id="top_rank" name="top_rank" type="number" placeholder="1-10" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="link_url">Link-URL</Label>
+          <Input id="link_url" name="link_url" placeholder="https://…" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="image">Cover / Bild</Label>
+          <Input id="image" name="image" type="file" accept="image/*" />
+        </div>
+        <div className="flex items-center space-x-2 pt-2">
+          <input type="checkbox" id="is_featured" name="is_featured" className="h-4 w-4 rounded border-input" />
+          <Label htmlFor="is_featured">Als „App der Woche“ (Featured) markieren</Label>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="position">Reihenfolge</Label>
+          <Input id="position" name="position" type="number" defaultValue={0} />
+        </div>
+        <Button type="submit" disabled={busy}>{busy ? "Speichern…" : "Game/App hinzufügen"}</Button>
+      </form>
+
+      <div className="surface-lux rounded-sm">
+        {games.map((g) => (
+          <div key={g.id} className="flex items-center justify-between border-b border-border/60 px-5 py-3">
+            <span className="truncate text-sm">
+              {g.title} <span className="text-muted-foreground">— {g.kind} {g.platform ? `(${g.platform})` : ""}</span>
+            </span>
+            <Button variant="ghost" size="sm" onClick={() => remove(g.id)}>Löschen</Button>
           </div>
         ))}
       </div>
