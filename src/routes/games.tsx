@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Heart, Share2, Eye, Star, ExternalLink, Bot } from "lucide-react";
+import { Heart, Share2, Eye, Star, ExternalLink, Bot, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMediaUrl } from "@/lib/media";
 import { LanguageSwitcher } from "@/lib/i18n";
@@ -208,7 +208,9 @@ function GamesPage() {
         </header>
 
         <section className="mx-auto max-w-6xl px-6 pb-12 pt-14 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.4em] text-primary">Gaming Desk</p>
+          <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.4em] text-primary mb-2">
+            <Gamepad2 className="h-3.5 w-3.5" /> Palmon Survival Hub
+          </p>
           <h2 className="text-chrome mx-auto mt-5 font-display text-5xl leading-[0.95] sm:text-7xl">
             GAMES. APPS.
           </h2>
