@@ -301,6 +301,22 @@ function ArtistsAdmin() {
 function GamesAdmin() {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [kind, setKind] = useState("game");
+  const [platform, setPlatform] = useState("");
+  const [rating, setRating] = useState("8.5");
+  const [topRank, setTopRank] = useState("");
+  const [likes, setLikes] = useState("0");
+  const [shares, setShares] = useState("0");
+  const [views, setViews] = useState("0");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [position, setPosition] = useState("0");
+
   const { data: games = [] } = useQuery({
     queryKey: ["game_posts"],
     queryFn: async () => {
@@ -310,6 +326,41 @@ function GamesAdmin() {
     },
   });
 
+  function startEdit(g: any) {
+    setEditingId(g.id);
+    setTitle(g.title ?? "");
+    setSubtitle(g.subtitle ?? "");
+    setDescription(g.description ?? "");
+    setKind(g.kind ?? "game");
+    setPlatform(g.platform ?? "");
+    setRating(String(g.rating ?? 8.5));
+    setTopRank(g.top_rank !== null ? String(g.top_rank) : "");
+    setLikes(String(g.likes ?? 0));
+    setShares(String(g.shares ?? 0));
+    setViews(String(g.views ?? 0));
+    setLinkUrl(g.link_url ?? "");
+    setIsFeatured(Boolean(g.is_featured));
+    setPosition(String(g.position ?? 0));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setTitle("");
+    setSubtitle("");
+    setDescription("");
+    setKind("game");
+    setPlatform("");
+    setRating("8.5");
+    setTopRank("");
+    setLikes("0");
+    setShares("0");
+    setViews("0");
+    setLinkUrl("");
+    setIsFeatured(false);
+    setPosition("0");
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -317,27 +368,40 @@ function GamesAdmin() {
     const image = fd.get("image") as File | null;
     setBusy(true);
     try {
-      const image_url = image?.size ? await uploadMedia(image, "games") : null;
-      const { error } = await supabase.from("game_posts").insert({
-        title: String(fd.get("title")),
-        subtitle: String(fd.get("subtitle") ?? ""),
-        description: String(fd.get("description") ?? ""),
-        kind: String(fd.get("kind") ?? "game"),
-        platform: String(fd.get("platform") ?? ""),
-        rating: Number(fd.get("rating") ?? 0),
-        link_url: String(fd.get("link_url") ?? ""),
-        image_url,
-        is_featured: fd.get("is_featured") === "on",
-        top_rank: fd.get("top_rank") ? Number(fd.get("top_rank")) : null,
-        position: Number(fd.get("position") ?? 0),
-        likes: Number(fd.get("likes") ?? 0),
-        shares: Number(fd.get("shares") ?? 0),
-        views: Number(fd.get("views") ?? 0),
-      });
-      if (error) throw error;
-      form.reset();
+      const image_url = image?.size ? await uploadMedia(image, "games") : undefined;
+
+      const payload: any = {
+        title,
+        subtitle,
+        description,
+        kind,
+        platform,
+        rating: Number(rating),
+        link_url: linkUrl,
+        is_featured: isFeatured,
+        top_rank: topRank ? Number(topRank) : null,
+        position: Number(position),
+        likes: Number(likes),
+        shares: Number(shares),
+        views: Number(views),
+      };
+
+      if (image_url) {
+        payload.image_url = image_url;
+      }
+
+      if (editingId) {
+        const { error } = await supabase.from("game_posts").update(payload).eq("id", editingId);
+        if (error) throw error;
+        toast.success("Game/App aktualisiert");
+      } else {
+        const { error } = await supabase.from("game_posts").insert(payload);
+        if (error) throw error;
+        toast.success("Game/App hinzugefügt");
+      }
+
+      cancelEdit();
       qc.invalidateQueries({ queryKey: ["game_posts"] });
-      toast.success("Game/App hinzugefügt");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler beim Speichern");
     } finally {
@@ -348,78 +412,92 @@ function GamesAdmin() {
   async function remove(id: string) {
     const { error } = await supabase.from("game_posts").delete().eq("id", id);
     if (error) toast.error(error.message);
-    else qc.invalidateQueries({ queryKey: ["game_posts"] });
+    else {
+      if (editingId === id) cancelEdit();
+      qc.invalidateQueries({ queryKey: ["game_posts"] });
+      toast.success("Gelöscht");
+    }
   }
 
   return (
     <div className="mt-6 space-y-8">
       <form onSubmit={onSubmit} className="surface-lux space-y-4 rounded-sm p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg">{editingId ? "Game/App bearbeiten" : "Neues Game / Neue App"}</h3>
+          {editingId && (
+            <Button type="button" variant="outline" size="sm" onClick={cancelEdit}>
+              Abbrechen
+            </Button>
+          )}
+        </div>
         <div className="space-y-2">
           <Label htmlFor="title">Titel</Label>
-          <Input id="title" name="title" required />
+          <Input id="title" name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="subtitle">Untertitel</Label>
-          <Input id="subtitle" name="subtitle" />
+          <Input id="subtitle" name="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="description">Beschreibung</Label>
-          <Textarea id="description" name="description" rows={3} />
+          <Textarea id="description" name="description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="kind">Art</Label>
-            <select id="kind" name="kind" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+            <select id="kind" name="kind" value={kind} onChange={(e) => setKind(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
               <option value="game">Game</option>
               <option value="app">App</option>
             </select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="platform">Plattform</Label>
-            <Input id="platform" name="platform" placeholder="z.B. iOS, Android, PC" />
+            <Input id="platform" name="platform" value={platform} onChange={(e) => setPlatform(e.target.value)} placeholder="z.B. iOS, Android, PC" />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="rating">Rating (0-10)</Label>
-            <Input id="rating" name="rating" type="number" step="0.1" defaultValue={8.5} />
+            <Input id="rating" name="rating" type="number" step="0.1" value={rating} onChange={(e) => setRating(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="top_rank">Top 10 Rang (optional)</Label>
-            <Input id="top_rank" name="top_rank" type="number" placeholder="1-10" />
+            <Input id="top_rank" name="top_rank" type="number" value={topRank} onChange={(e) => setTopRank(e.target.value)} placeholder="1-10" />
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="likes">Likes (Startwert)</Label>
-            <Input id="likes" name="likes" type="number" defaultValue={0} />
+            <Label htmlFor="likes">Likes</Label>
+            <Input id="likes" name="likes" type="number" value={likes} onChange={(e) => setLikes(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="shares">Shares (Startwert)</Label>
-            <Input id="shares" name="shares" type="number" defaultValue={0} />
+            <Label htmlFor="shares">Shares</Label>
+            <Input id="shares" name="shares" type="number" value={shares} onChange={(e) => setShares(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="views">Views (Startwert)</Label>
-            <Input id="views" name="views" type="number" defaultValue={0} />
+            <Label htmlFor="views">Views</Label>
+            <Input id="views" name="views" type="number" value={views} onChange={(e) => setViews(e.target.value)} />
           </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="link_url">Link-URL</Label>
-          <Input id="link_url" name="link_url" placeholder="https://…" />
+          <Input id="link_url" name="link_url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://…" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="image">Cover / Bild</Label>
+          <Label htmlFor="image">Cover / Bild {editingId && "(leer lassen, um das aktuelle zu behalten)"}</Label>
           <Input id="image" name="image" type="file" accept="image/*" />
         </div>
         <div className="flex items-center space-x-2 pt-2">
-          <input type="checkbox" id="is_featured" name="is_featured" className="h-4 w-4 rounded border-input" />
+          <input type="checkbox" id="is_featured" name="is_featured" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="h-4 w-4 rounded border-input" />
           <Label htmlFor="is_featured">Als „App der Woche“ (Featured) markieren</Label>
         </div>
         <div className="space-y-2">
           <Label htmlFor="position">Reihenfolge</Label>
-          <Input id="position" name="position" type="number" defaultValue={0} />
+          <Input id="position" name="position" type="number" value={position} onChange={(e) => setPosition(e.target.value)} />
         </div>
-        <Button type="submit" disabled={busy}>{busy ? "Speichern…" : "Game/App hinzufügen"}</Button>
+        <Button type="submit" disabled={busy}>
+          {busy ? "Speichern…" : editingId ? "Änderungen speichern" : "Game/App hinzufügen"}
+        </Button>
       </form>
 
       <div className="surface-lux rounded-sm">
@@ -428,7 +506,10 @@ function GamesAdmin() {
             <span className="truncate text-sm">
               {g.title} <span className="text-muted-foreground">— Likes: {g.likes} | Shares: {g.shares} | Views: {g.views}</span>
             </span>
-            <Button variant="ghost" size="sm" onClick={() => remove(g.id)}>Löschen</Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => startEdit(g)}>Bearbeiten</Button>
+              <Button variant="ghost" size="sm" onClick={() => remove(g.id)}>Löschen</Button>
+            </div>
           </div>
         ))}
       </div>
