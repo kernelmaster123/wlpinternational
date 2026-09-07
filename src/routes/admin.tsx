@@ -330,6 +330,9 @@ function GamesAdmin() {
         is_featured: fd.get("is_featured") === "on",
         top_rank: fd.get("top_rank") ? Number(fd.get("top_rank")) : null,
         position: Number(fd.get("position") ?? 0),
+        likes: Number(fd.get("likes") ?? 0),
+        shares: Number(fd.get("shares") ?? 0),
+        views: Number(fd.get("views") ?? 0),
       });
       if (error) throw error;
       form.reset();
@@ -386,6 +389,20 @@ function GamesAdmin() {
             <Input id="top_rank" name="top_rank" type="number" placeholder="1-10" />
           </div>
         </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="likes">Likes (Startwert)</Label>
+            <Input id="likes" name="likes" type="number" defaultValue={0} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="shares">Shares (Startwert)</Label>
+            <Input id="shares" name="shares" type="number" defaultValue={0} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="views">Views (Startwert)</Label>
+            <Input id="views" name="views" type="number" defaultValue={0} />
+          </div>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="link_url">Link-URL</Label>
           <Input id="link_url" name="link_url" placeholder="https://…" />
@@ -409,7 +426,7 @@ function GamesAdmin() {
         {games.map((g) => (
           <div key={g.id} className="flex items-center justify-between border-b border-border/60 px-5 py-3">
             <span className="truncate text-sm">
-              {g.title} <span className="text-muted-foreground">— {g.kind} {g.platform ? `(${g.platform})` : ""}</span>
+              {g.title} <span className="text-muted-foreground">— Likes: {g.likes} | Shares: {g.shares} | Views: {g.views}</span>
             </span>
             <Button variant="ghost" size="sm" onClick={() => remove(g.id)}>Löschen</Button>
           </div>
