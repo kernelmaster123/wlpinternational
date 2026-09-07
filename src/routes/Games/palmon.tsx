@@ -1,9 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Shield, UserPlus, Trash2, Edit, Sparkles, Star, ExternalLink, Settings, Plus, Check, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { getMediaUrl } from "@/lib/media";
+import { useState, useEffect } from "react";
+import { Shield, UserPlus, Trash2, Edit, Sparkles, Star, ExternalLink, Settings, Plus, X } from "lucide-react";
 
 export const Route = createFileRoute("/Games/Palmon")({
   component: PalmonSurvivalPage,
@@ -31,15 +28,15 @@ type GuildMember = {
   position: number;
 };
 
-function useSigned(path: string | null | undefined) {
-  const [url, setUrl] = useState<string | null>(null);
-  useState(() => {
-    if (path) {
-      getMediaUrl(path).then((u) => setUrl(u));
-    }
-  });
-  return url;
-}
+const INITIAL_GUILDS: Guild[] = [
+  { id: "1", name: "Dragon Riders", color: "#ef4444", description: "Aktive Gilde sucht Verstärkung für Boss-Raids und gemeinsame Zucht.", logo_url: "", position: 0 },
+  { id: "2", name: "Shadow Hunters", color: "#3b82f6", description: "Fokus auf PvP und Basenbau. Erfahrenes Team.", logo_url: "", position: 1 },
+];
+
+const INITIAL_MEMBERS: GuildMember[] = [
+  { id: "m1", guild_id: "1", name: "Alex_99", rank: "Gildenmeister", highlight: true, effect_type: "glow", custom_color: "#ef4444", avatar_url: "", bio: "", position: 0 },
+  { id: "m2", guild_id: "2", name: "Valkyrie", rank: "Offizier", highlight: false, effect_type: "pulse", custom_color: "#3b82f6", avatar_url: "", bio: "", position: 0 },
+];
 
 function getEffectClass(effectType: string) {
   switch (effectType) {
@@ -55,33 +52,31 @@ function getEffectClass(effectType: string) {
 }
 
 function PalmonSurvivalPage() {
-  const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState("patchnotes");
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
+  // Lokale States mit LocalStorage-Synchronisation
+  const [guilds, setGuilds] = useState<Guild[]>(() => {
+    const saved = localStorage.getItem("palmon_local_guilds");
+    return saved ? JSON.parse(saved) : INITIAL_GUILDS;
+  });
+
+  const [members, setMembers] = useState<GuildMember[]>(() => {
+    const saved = localStorage.getItem("palmon_local_members");
+    return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("palmon_local_guilds", JSON.stringify(guilds));
+  }, [guilds]);
+
+  useEffect(() => {
+    localStorage.setItem("palmon_local_members", JSON.stringify(members));
+  }, [members]);
+
   // States für Admin-Formulare
-  const [selectedGuildForMember, setSelectedGuildForMember] = useState<string | null>(null);
   const [editingGuild, setEditingGuild] = useState<Partial<Guild> | null>(null);
   const [editingMember, setEditingMember] = useState<Partial<GuildMember> | null>(null);
-
-  // Daten aus Supabase laden
-  const { data: guilds = [] } = useQuery({
-    queryKey: ["palmon_guilds"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("guilds").select("*").order("position", { ascending: true });
-      if (error) throw error;
-      return data as Guild[];
-    },
-  });
-
-  const { data: members = [] } = useQuery({
-    queryKey: ["palmon_guild_members"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("guild_members").select("*").order("position", { ascending: true });
-      if (error) throw error;
-      return data as GuildMember[];
-    },
-  });
 
   // Statische Daten für Patchnotes, Server, Quests
   const patchnotes = [
@@ -100,40 +95,59 @@ function PalmonSurvivalPage() {
   ];
 
   // Admin-Aktionen Gilden
-  async function saveGuild(e: React.FormEvent) {
+  function saveGuild(e: React.FormEvent) {
     e.preventDefault();
     if (!editingGuild?.name) return;
+    
     if (editingGuild.id) {
-      await supabase.from("guilds").update(editingGuild).eq("id", editingGuild.id);
+      setGuilds(guilds.map((g) => (g.id === editingGuild.id ? ({ ...g, ...editingGuild } as Guild) : g)));
     } else {
-      await supabase.from("guilds").insert([editingGuild]);
+      const newGuild: Guild = {
+        id: crypto.randomUUID(),
+        name: editingGuild.name,
+        color: editingGuild.color || "#ef4444",
+        description: editingGuild.description || "",
+        logo_url: editingGuild.logo_url || "",
+        position: guilds.length,
+      };
+      setGuilds([...guilds, newGuild]);
     }
     setEditingGuild(null);
-    qc.invalidateQueries({ queryKey: ["palmon_guilds"] });
   }
 
-  async function deleteGuild(id: string) {
+  function deleteGuild(id: string) {
     if (!confirm("Gilde wirklich löschen?")) return;
-    await supabase.from("guilds").delete().eq("id", id);
-    qc.invalidateQueries({ queryKey: ["palmon_guilds"] });
+    setGuilds(guilds.filter((g) => g.id !== id));
+    setMembers(members.filter((m) => m.guild_id !== id));
   }
 
   // Admin-Aktionen Mitglieder
-  async function saveMember(e: React.FormEvent) {
+  function saveMember(e: React.FormEvent) {
     e.preventDefault();
     if (!editingMember?.name || !editingMember?.guild_id) return;
+
     if (editingMember.id) {
-      await supabase.from("guild_members").update(editingMember).eq("id", editingMember.id);
+      setMembers(members.map((m) => (m.id === editingMember.id ? ({ ...m, ...editingMember } as GuildMember) : m)));
     } else {
-      await supabase.from("guild_members").insert([editingMember]);
+      const newMember: GuildMember = {
+        id: crypto.randomUUID(),
+        guild_id: editingMember.guild_id,
+        name: editingMember.name,
+        rank: editingMember.rank || "Mitglied",
+        effect_type: editingMember.effect_type || "none",
+        highlight: editingMember.highlight || false,
+        custom_color: editingMember.custom_color || null,
+        avatar_url: editingMember.avatar_url || "",
+        bio: editingMember.bio || "",
+        position: members.length,
+      };
+      setMembers([...members, newMember]);
     }
     setEditingMember(null);
-    qc.invalidateQueries({ queryKey: ["palmon_guild_members"] });
   }
 
-  async function deleteMember(id: string) {
-    await supabase.from("guild_members").delete().eq("id", id);
-    qc.invalidateQueries({ queryKey: ["palmon_guild_members"] });
+  function deleteMember(id: string) {
+    setMembers(members.filter((m) => m.id !== id));
   }
 
   return (
@@ -146,7 +160,7 @@ function PalmonSurvivalPage() {
               ← Zurück zu Games & Apps
             </Link>
             <h1 className="mt-2 font-display text-3xl tracking-wide text-gold">PALMON SURVIVAL HUB</h1>
-            <p className="text-sm text-muted-foreground">Offizielles Community-, Server- & Gilden-Hub</p>
+            <p className="text-sm text-muted-foreground">Offizielles Community-, Server- & Gilden-Hub (Lokal aktiv)</p>
           </div>
           <button
             onClick={() => setIsAdminOpen(!isAdminOpen)}
@@ -163,7 +177,7 @@ function PalmonSurvivalPage() {
           <div className="surface-lux border-2 border-primary/60 p-6 space-y-6 rounded-sm bg-black/80">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <h2 className="font-display text-xl text-primary flex items-center gap-2">
-                <Settings className="h-5 w-5" /> Zentrales Gilden-Admin-Menü
+                <Settings className="h-5 w-5" /> Lokales Gilden-Admin-Menü
               </h2>
               <button onClick={() => setIsAdminOpen(false)} className="text-muted-foreground hover:text-white">
                 <X className="h-5 w-5" />
@@ -233,18 +247,10 @@ function PalmonSurvivalPage() {
                       <span className="font-display text-sm">{g.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setEditingGuild(g)}
-                        className="p-1.5 text-muted-foreground hover:text-primary"
-                        title="Bearbeiten"
-                      >
+                      <button onClick={() => setEditingGuild(g)} className="p-1.5 text-muted-foreground hover:text-primary" title="Bearbeiten">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button
-                        onClick={() => deleteGuild(g.id)}
-                        className="p-1.5 text-muted-foreground hover:text-red-500"
-                        title="Löschen"
-                      >
+                      <button onClick={() => deleteGuild(g.id)} className="p-1.5 text-muted-foreground hover:text-red-500" title="Löschen">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -276,7 +282,7 @@ function PalmonSurvivalPage() {
                       className="bg-background px-3 py-2 text-sm border border-white/10"
                       required
                     >
-                      <Wählen Sie eine Gilde></Wählen>
+                      <option value="">Gilde wählen...</option>
                       {guilds.map((g) => (
                         <option key={g.id} value={g.id}>{g.name}</option>
                       ))}
@@ -436,12 +442,12 @@ function PalmonSurvivalPage() {
             </div>
           )}
 
-          {/* GILDEN BEREICH (DYNAMISCH MIT ADMIN-STEUERUNG & EFFEKTEN) */}
+          {/* GILDEN BEREICH */}
           {activeTab === "guilds" && (
             <div className="space-y-8">
               {guilds.length === 0 ? (
                 <div className="surface-lux p-8 text-center text-muted-foreground">
-                  <p>Noch keine Gilden vorhanden. Öffne das <button onClick={() => setIsAdminOpen(true)} className="text-primary underline">Admin-Menü</button>, um Gilden und Mitglieder hinzuzufügen.</p>
+                  <p>Noch keine Gilden vorhanden. Öffne das <button onClick={() => setIsAdminOpen(true)} className="text-primary underline">Admin-Menü</button>, um Gilden hinzuzufügen.</p>
                 </div>
               ) : (
                 guilds.map((guild) => {
